@@ -8,46 +8,26 @@ version: "3.9"
 
 services:
   jenkins:
-    build: .
+    image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
+    user: root                    # necesario para que pueda usar el socket
     restart: unless-stopped
-    networks:
-      - cicd_network
     ports:
-      - "${JENKINS_UI_PORT:-9082}:8080"
-      - "${JENKINS_AGENT_PORT:-50000}:50000"
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
     group_add:
-      - "${DOCKER_GID:-0}"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/login >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 40s
-
-  smee:
-    build: ./smee
-    container_name: smee-client
-    restart: unless-stopped
-    environment:
-      SMEE_URL: "${SMEE_CHANNEL_URL}"
-      SMEE_TARGET: "http://jenkins:8080/github-webhook/"
-    networks:
-      - cicd_network
-    depends_on:
-      jenkins:
-        condition: service_healthy
-
-networks:
-  cicd_network:
-    external: true
-    name: cicd_network
+      - "0"                       # grupo root (dueño del socket en Linux)
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y docker.io maven git &&
+        /usr/bin/tini -- /usr/local/bin/jenkins.sh
+      "
 
 volumes:
   jenkins_home:
-
