@@ -18,6 +18,7 @@ pipeline {
                     echo "Version: ${env.VERSION}"
                 }
                 dir('backend') {
+                    // Si usas el wrapper de Maven (mvnw), usa ./mvnw en lugar de mvn
                     sh 'mvn -B test'
                 }
             }
@@ -26,11 +27,11 @@ pipeline {
         stage('Package & Tag Inmutable') {
             steps {
                 dir('backend') {
-                    sh "mvn -B versions:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false"
+                    sh "mvn -B versions:set -DnewVersion=${env.VERSION} -DgenerateBackupPoms=false"
                     sh 'mvn -B package -DskipTests'
                 }
-                sh "docker build -t ${REGISTRY}/${API_IMAGE}:${VERSION} backend"
-                sh "docker build -t ${REGISTRY}/${WEB_IMAGE}:${VERSION} frontend"
+                sh "docker build -t ${REGISTRY}/${API_IMAGE}:${env.VERSION} backend"
+                sh "docker build -t ${REGISTRY}/${WEB_IMAGE}:${env.VERSION} frontend"
             }
         }
 
@@ -63,7 +64,7 @@ EOF
 
         stage('Deploy & Smoke Test') {
             steps {
-                sh "REGISTRY=${REGISTRY} TAG=${VERSION} docker compose -f deploy/docker-compose.yml up -d"
+                sh "REGISTRY=${REGISTRY} TAG=${env.VERSION} docker compose -f deploy/docker-compose.yml up -d"
                 sh '''
                     for i in $(seq 1 15); do
                         if curl -fs http://host.docker.internal:8080/api/tasks > /dev/null; then
