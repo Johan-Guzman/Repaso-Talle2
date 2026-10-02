@@ -1,6 +1,6 @@
 # StudyTrack — Código Base (Taller Evaluativo 2)
 
-Ingeniería de Software V · Universidad Icesi · Período 202620
+LALALALALALALALAA
 
 Este repositorio es el punto de partida del **Taller Evaluativo 2: Orquestación
 CI/CD con Jenkins, Empaquetamiento Inmutable en Nexus y Webhooks con Smee.io**.
