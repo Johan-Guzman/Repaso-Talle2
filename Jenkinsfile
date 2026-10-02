@@ -1,6 +1,9 @@
 pipeline {
     agent any
 
+    triggers {
+            githubPush()
+        }
     environment {
         REGISTRY   = 'localhost:9080'
         NEXUS_MVN  = 'http://nexus:8081/repository/maven-releases/'
@@ -19,6 +22,8 @@ pipeline {
                 }
                 dir('backend') {
                     // Si usas el wrapper de Maven (mvnw), usa ./mvnw en lugar de mvn
+                    sh 'chmod +x mvnw'
+                    sh './mvnw -B test -Drevision=pending'
                     sh 'mvn -B test'
                 }
             }
