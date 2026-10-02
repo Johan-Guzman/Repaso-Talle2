@@ -29,7 +29,7 @@ pipeline {
                     echo "Version: ${env.VERSION}"
                 }
 
-                dir('backend') {
+                dir('codigo_base/backend') {
                     sh 'mvn -B test'
                 }
             }
@@ -37,13 +37,13 @@ pipeline {
 
         stage('Package & Tag Inmutable') {
             steps {
-                dir('backend') {
+                dir('codigo_base/backend') {
                     sh "mvn -B versions:set -DnewVersion=${env.VERSION} -DgenerateBackupPoms=false"
                     sh 'mvn -B package -DskipTests'
                 }
 
-                sh "docker build -t ${REGISTRY}/${API_IMAGE}:${env.VERSION} backend"
-                sh "docker build -t ${REGISTRY}/${WEB_IMAGE}:${env.VERSION} frontend"
+                sh "docker build -t ${REGISTRY}/${API_IMAGE}:${env.VERSION} codigo_base/backend"
+                sh "docker build -t ${REGISTRY}/${WEB_IMAGE}:${env.VERSION} codigo_base/frontend"
             }
         }
 
@@ -69,7 +69,7 @@ pipeline {
 </settings>
 EOF
 
-                        cd backend
+                        cd codigo_base/backend
 
                         mvn -B \
                             -s ../settings.xml \
