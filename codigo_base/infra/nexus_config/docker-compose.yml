@@ -13,14 +13,20 @@ services:
     networks:
       - cicd_network
     ports:
+    - "${NEXUS_UI_PORT:-9081}:8081"                  # UI y REST API
+    - "${NEXUS_DOCKER_REGISTRY_PORT:-9080}:5000"     # Docker Registry hosted
     volumes:
+    - nexus_data:/nexus-data
+
     environment:
+    - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx1024m -XX:MaxDirectMemorySize=1g
+
     healthcheck:
-      test: 
-      interval: 
-      timeout: 
-      retries: 
-      start_period: 
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/service/rest/v1/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 
 networks:
   cicd_network:

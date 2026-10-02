@@ -12,28 +12,33 @@ version: "3.9"
 
 services:
   backend:
-    # TODO
-    container_name: 
+    # TODO: Update image with Nexus registry and tag
+    image: localhost:5000/studytrack-api:1.0.0
+    container_name: studytrack-backend
     ports:
+      - "8080:8080"
     networks:
+      - product-network
     healthcheck:
-      test:
-      interval: 
-      timeout: 
-      retries: 
-      start_period: 
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s 
 
   frontend:
-    # TODO:
-    image: 
-    container_name:
+    # TODO: Update image with Nexus registry and tag
+    image: localhost:5000/studytrack-frontend:1.0.0
+    container_name: studytrack-frontend
     ports:
+      - "80:80"
     networks:
+      - product-network
     depends_on:
       backend:
-        condition:
+        condition: service_healthy
 
 networks:
-  # TODO
+  # Shared network for backend and frontend communication
   product-network:
-    driver: 
+    driver: bridge 
