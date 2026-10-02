@@ -1,0 +1,16 @@
+# Java Maven
+**/target/
+*.class
+
+# Frontend React
+**/node_modules/
+**/dist/
+**/.vite/
+
+# Archivos de construcción / TS
+**/tsconfig.tsbuildinfo
+
+# OS / Editor / Logs
+.DS_Store
+*.log
+**/.env
