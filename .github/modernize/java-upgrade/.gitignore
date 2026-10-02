@@ -13,4 +13,3 @@
 # OS / Editor / Logs
 .DS_Store
 *.log
-**/.env
