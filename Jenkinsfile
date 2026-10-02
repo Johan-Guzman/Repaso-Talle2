@@ -29,7 +29,7 @@ pipeline {
                     echo "Version: ${env.VERSION}"
                 }
 
-                dir('/backend') {
+                dir('codigo_base/backend') {
                     sh 'mvn -B test'
                 }
             }
@@ -37,18 +37,21 @@ pipeline {
 
         stage('Package & Tag Inmutable') {
             steps {
-                dir('backend') {
+
+                dir('codigo_base/backend') {
                     sh "mvn -B versions:set -DnewVersion=${env.VERSION} -DgenerateBackupPoms=false"
                     sh 'mvn -B package -DskipTests'
                 }
 
-                sh "docker build -t ${REGISTRY}/${API_IMAGE}:${env.VERSION} backend"
-                sh "docker build -t ${REGISTRY}/${WEB_IMAGE}:${env.VERSION} frontend"
+                sh "docker build -t ${REGISTRY}/${API_IMAGE}:${env.VERSION} codigo_base/backend"
+
+                sh "docker build -t ${REGISTRY}/${WEB_IMAGE}:${env.VERSION} codigo_base/frontend"
             }
         }
 
         stage('Publish to Nexus') {
             steps {
+
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'nexus-credentials',
@@ -56,6 +59,7 @@ pipeline {
                         passwordVariable: 'NEXUS_PASS'
                     )
                 ]) {
+
                     sh '''
                         cat > settings.xml <<EOF
 <settings>
@@ -69,15 +73,15 @@ pipeline {
 </settings>
 EOF
 
-                        cd backend
+                        cd codigo_base/backend
 
                         mvn -B \
-                            -s ../settings.xml \
+                            -s ../../settings.xml \
                             deploy \
                             -DskipTests \
                             -Dnexus.maven.url=${NEXUS_MVN}
 
-                        cd ..
+                        cd ../..
 
                         rm -f settings.xml
 
@@ -86,6 +90,7 @@ EOF
                             --password-stdin
 
                         docker push ${REGISTRY}/${API_IMAGE}:${VERSION}
+
                         docker push ${REGISTRY}/${WEB_IMAGE}:${VERSION}
 
                         docker logout ${REGISTRY}
@@ -96,7 +101,8 @@ EOF
 
         stage('Deploy & Smoke Test') {
             steps {
-                sh "REGISTRY=${REGISTRY} TAG=${env.VERSION} docker compose -f deploy/docker-compose.yml up -d"
+
+                sh "REGISTRY=${REGISTRY} TAG=${env.VERSION} docker compose -f codigo_base/deploy/docker-compose.yml up -d"
 
                 sh '''
                     for i in $(seq 1 15); do
@@ -118,6 +124,7 @@ EOF
     }
 
     post {
+
         failure {
             echo "Pipeline fallo en version ${env.VERSION}"
         }
